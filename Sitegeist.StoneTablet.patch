@@ -1,0 +1,218 @@
+From 8e3ab7ff33ae9625202c9e8a1ff68d0af154946b Mon Sep 17 00:00:00 2001
+From: Jon Uhlmann <account@uhlmann.pro>
+Date: Wed, 13 Dec 2023 11:11:20 +0100
+Subject: [PATCH 1/4] FEATURE: add default excluded fields
+
+---
+ Classes/Runtime/Action/RegisterFormAction.php |  8 +++++++-
+ Configuration/Settings.yaml                   |  4 ++++
+ README.md                                     | 17 ++++++++++++-----
+ 3 files changed, 23 insertions(+), 6 deletions(-)
+
+diff --git a/Classes/Runtime/Action/RegisterFormAction.php b/Classes/Runtime/Action/RegisterFormAction.php
+index 67e7262..f61cb08 100644
+--- a/Classes/Runtime/Action/RegisterFormAction.php
++++ b/Classes/Runtime/Action/RegisterFormAction.php
+@@ -8,6 +8,7 @@
+
+ namespace Sitegeist\StoneTablet\Runtime\Action;
+
++use Neos\Flow\Annotations as Flow;
+ use Neos\ContentRepository\Domain\Model\Node;
+ use Neos\Flow\Mvc\ActionResponse;
+ use Neos\Flow\ResourceManagement\PersistentResource;
+@@ -21,6 +22,9 @@
+
+ class RegisterFormAction extends AbstractAction
+ {
++    #[Flow\InjectConfiguration(path: 'defaultExcludedFields')]
++    protected $defaultExcludedFields;
++
+     public const DATE_FORMAT = 'Y-m-d';
+     public function __construct(
+         private readonly FormRegistrationRepository $formRegistrationRepository,
+@@ -36,10 +40,12 @@ public function perform(): ?ActionResponse
+         $formData = $this->prepareFormDataForSerialization($this->options['formData']);
+
+         $excludedFields = array_map(
+-            fn($excludedField) => Field::fromArray($excludedField)->name,
++            fn ($excludedField) => Field::fromArray($excludedField)->name,
+             $formNode->getProperty('excludedFields') ?: []
+         );
+
++        $excludedFields = array_merge($excludedFields, $this->defaultExcludedFields);
++
+         foreach ($formData as $fieldName => $fieldValue) {
+             if (is_object($fieldValue)) {
+                 $excludedFields[] = $fieldName;
+diff --git a/Configuration/Settings.yaml b/Configuration/Settings.yaml
+index 0777178..1108270 100644
+--- a/Configuration/Settings.yaml
++++ b/Configuration/Settings.yaml
+@@ -8,3 +8,7 @@ Neos:
+         javascript:
+           '@sitegeist/stonetablet-editors':
+             resource: 'resource://Sitegeist.StoneTablet/Public/Neos.Ui/Plugin.js'
++
++Sitegeist:
++  StoneTablet:
++    defaultExcludedFields: []
+diff --git a/README.md b/README.md
+index 15ac573..eaffb3d 100644
+--- a/README.md
++++ b/README.md
+@@ -5,7 +5,6 @@ This package gives neos editors the option to bind export functionality to fusio
+
+ !!! The package does not have any dependency to Sitegeist.PaperTiger but the forms that are assembled using this package are also covered.
+
+-
+ ### Authors & Sponsors
+
+ * Masoud Hedayati - hedayati@sitegeist.de
+@@ -20,20 +19,28 @@ To create the required tables run `./flow doctrine:migrate`
+
+ We use semantic-versioning so every breaking change will increase the major-version number.
+
+-## Usage
++## Usage
+
+ Forms need to adjust their configuration in order to be able to register themselves as an export candidate.
+
+ ## Configuration
++
+ In order to bind the functionality to a form the package adds the `Sitegeist.StoneTablet:Mixin.ExportableForm` to Neos cms.
+ Forms which inherit the mixin, possess some new properties to determine if and how a form must be exported.
+
+ ```yaml
+ Acme.Demo:FusionOrPaperTigerForm:
+   superTypes:
+-    'Sitegeist.StoneTablet:Mixin.ExportableForm': true
++    'Sitegeist.StoneTablet:Mixin.ExportableForm': true
+ ```
+
++To exclude fields per default from the export you have to alter the setting `Sitegeist.StoneTablet.defaultExcludedFields`
++
++```yaml
++Sitegeist:
++  StoneTablet:
++    defaultExcludedFields: ['honeypotfield', 'defaultCaptcheField']
++```
+
+ ## Inspector
+
+@@ -44,7 +51,7 @@ By selecting the Exportable checkbox, the form is registered as an export candid
+ ### Excluded Fields
+
+ "Excluded Fields" property contains an array of field names, which are not supposed to be registered in the database and consequently not appear in the export file.
+-Field names of submit button, Friendly Captcha and privacy policy are best cases to be excluded from the export.
++Field names of submit button, Friendly Captcha and privacy policy are best cases to be excluded from the export.
+
+ ### Upload Fields
+
+@@ -52,5 +59,5 @@ Upload Fields are also included in the export. As a result the exported archive
+
+ ## Export Backend Module
+
+-Form Export Management is the corresponding backend module to export submitted forms over a specific period of time.
++Form Export Management is the corresponding backend module to export submitted forms over a specific period of time.
+ Removed forms do not appear in the export list anymore but the data remains in the database.
+
+From d7aa66b6ab828b681812a4a61bc1604f76cbf32c Mon Sep 17 00:00:00 2001
+From: Jon Uhlmann <account@uhlmann.pro>
+Date: Wed, 13 Dec 2023 11:47:21 +0100
+Subject: [PATCH 2/4] Fix: Add missing dependency
+
+---
+ composer.json | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/composer.json b/composer.json
+index 752e136..f7ecd2f 100644
+--- a/composer.json
++++ b/composer.json
+@@ -8,7 +8,8 @@
+     "neos/neos": "~8.2",
+     "neos/fusion": "~8.2",
+     "neos/fusion-form": "~2.0",
+-    "sitegeist/inspectorgadget": "~2.0"
++    "sitegeist/inspectorgadget": "~2.0",
++    "phpoffice/phpspreadsheet": "^1.29"
+   },
+   "require-dev": {
+     "phpstan/phpstan": "~1.10.16",
+
+From 21a4c5432bb0d7baedb892d895affbb794d3f79a Mon Sep 17 00:00:00 2001
+From: Jon Uhlmann <account@uhlmann.pro>
+Date: Wed, 13 Dec 2023 11:47:43 +0100
+Subject: [PATCH 3/4] Fix: Remove nordmann prototype
+
+---
+ .../Override/Prototypes/Runtime/RuntimeForm.fusion       | 9 ---------
+ 1 file changed, 9 deletions(-)
+
+diff --git a/Resources/Private/Fusion/Override/Prototypes/Runtime/RuntimeForm.fusion b/Resources/Private/Fusion/Override/Prototypes/Runtime/RuntimeForm.fusion
+index 9329a51..923d2ed 100644
+--- a/Resources/Private/Fusion/Override/Prototypes/Runtime/RuntimeForm.fusion
++++ b/Resources/Private/Fusion/Override/Prototypes/Runtime/RuntimeForm.fusion
+@@ -11,12 +11,3 @@ prototype(Neos.Fusion.Form:Runtime.RuntimeForm) {
+         register.@if.isExportable = ${q(node).property('isExportable')}
+     }
+ }
+-
+-
+-prototype(Nordmann.NordmannGlobal:Document.WebPage) < prototype(Neos.Fusion:Component) {
+-    renderer = Nordmann.NordmannGlobal:Document.Base {
+-        body = Nordmann.Shared:Layout.Page {
+-            presentationObject = ${Nordmann.Page.forWebPage(documentNode, documentNode.context, documentNode.context.inBackend)}
+-        }
+-    }
+-}
+
+From f3ca851447506544de711a2fd0528c74e86fca48 Mon Sep 17 00:00:00 2001
+From: Jon Uhlmann <account@uhlmann.pro>
+Date: Wed, 13 Dec 2023 11:48:01 +0100
+Subject: [PATCH 4/4] Fix: Make backend module work without langauage dimension
+
+---
+ Classes/Domain/Form/FormDirectory.php | 24 +++++++++++++++++-------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/Classes/Domain/Form/FormDirectory.php b/Classes/Domain/Form/FormDirectory.php
+index c189c23..59764de 100644
+--- a/Classes/Domain/Form/FormDirectory.php
++++ b/Classes/Domain/Form/FormDirectory.php
+@@ -72,17 +72,27 @@ public function findFormLocatorByIdentifier(string $formId): ?FormLocator
+
+     private function getContentContexts(): \Iterator
+     {
+-        $languagePresets = $this->contentDimensionPresetSource->getAllPresets()['language']['presets'];
++        $languagePresets = $this->contentDimensionPresetSource->getAllPresets()['language']['presets'] ?? null;
+
+-        foreach (array_keys($languagePresets) as $preset) {
+-            $languageValues = $languagePresets[$preset]['values'];
+-
+-            yield $contentContext = $this->contentContextFactory->create([
+-                'dimensions' => ['language' => $languageValues],
+-                'targetDimensions' => ['language' => reset($languageValues)],
++        if (empty($languagePresets)) {
++            $contentContext = $this->contentContextFactory->create([
++                'dimensions' => [],
++                'targetDimensions' => [],
+                 'invisibleContentShown' => true,
+                 'inaccessibleContentShown' => true
+             ]);
++            yield $contentContext;
++        } else {
++            foreach (array_keys($languagePresets) as $preset) {
++                $languageValues = $languagePresets[$preset]['values'];
++
++                yield $contentContext = $this->contentContextFactory->create([
++                    'dimensions' => ['language' => $languageValues],
++                    'targetDimensions' => ['language' => reset($languageValues)],
++                    'invisibleContentShown' => true,
++                    'inaccessibleContentShown' => true
++                ]);
++            }
+         }
+     }
+ }
