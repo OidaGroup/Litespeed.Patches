@@ -1,10 +1,10 @@
 {
     "patches": {
         "mautic/api-library": {
-            "Fix Mautic API": "https://raw.githubusercontent.com/OidaGroup/Litespeed/patches/Mautic-Api.patch?token=GHSAT0AAAAAABPAYTZLGBMN3TEZKVJIL3LYZLZT2CQ"
+            "Fix Mautic API": "https://raw.githubusercontent.com/OidaGroup/Litespeed.Patches/main/Mautic-Api.patch"
         },
         "sitegeist/stonetablet": {
-            "Fix Stonetabled": "https://raw.githubusercontent.com/OidaGroup/Litespeed/patches/Sitegeist.StoneTablet.patch?token=GHSAT0AAAAAABPAYTZLRXRZQ2CGTYXNV6FQZLZT3DQ"
+            "Fix Stonetabled": "https://raw.githubusercontent.com/OidaGroup/Litespeed.Patches/main/Sitegeist.StoneTablet.patch"
         }
     }
 }
