@@ -102,3 +102,86 @@ index 9329a51..923d2ed 100644
 -        }
 -    }
 -}
+diff --git a/Classes/Domain/Form/FormLocator.php b/Classes/Domain/Form/FormLocator.php
+index fe70b10..21a432c 100644
+--- a/Classes/Domain/Form/FormLocator.php
++++ b/Classes/Domain/Form/FormLocator.php
+@@ -43,9 +43,11 @@ public static function fromFormIdentifier(
+             )
+         );
+
++        $formTitle = $formNode->getProperty('formTitle') ?? $formNode->getLabel();
++
+         return new self(
+             $formId,
+-            $formNode->getProperty('title'),
++            $formTitle,
+             $path
+         );
+     }
+diff --git a/NodeTypes/Mixin/ExportableForm.yaml b/NodeTypes/Mixin/ExportableForm.yaml
+index eb61de9..1b00213 100644
+--- a/NodeTypes/Mixin/ExportableForm.yaml
++++ b/NodeTypes/Mixin/ExportableForm.yaml
+@@ -1,25 +1,14 @@
+ 'Sitegeist.StoneTablet:Mixin.ExportableForm':
+   abstract: true
+-  superTypes:
+-    'Neos.Neos:Content': true
+-
+   ui:
+     inspector:
+       groups:
+         export:
+-          label: 'Export'
++          label: 'Form Export'
+           icon: archive
+           position: start 10
+
+   properties:
+-    title:
+-      type: string
+-      ui:
+-        label: 'Form Titel'
+-        inspector:
+-          group: export
+-      validation:
+-        'Neos.Neos/Validation/NotEmptyValidator': { }
+     isExportable:
+       type: boolean
+       defaultValue: false
+@@ -27,19 +16,31 @@
+         label: "Exportable"
+         inspector:
+           group: export
++          position: 10
++    formTitle:
++      type: string
++      ui:
++        label: 'Form Title'
++        inspector:
++          group: export
++          position: 20
++          hidden: 'ClientEval: !node.properties.isExportable'
++          editorOptions:
++            placeholder: 'ClientEval: node.label'
+     excludedFields:
+       type: array
+       ui:
+-        label: "Excluded Fields"
++        label: 'Excluded Fields'
+         help:
+-          message: "Field names which must be excluded from export"
++          message: 'Field names which must be excluded from export'
+         inspector:
+           group: export
+           editor: Sitegeist.InspectorGadget/Inspector/Editor
++          position: 30
++          hidden: 'ClientEval: !node.properties.isExportable'
+           editorOptions:
+             isCollection: true
+             isSortable: true
+             itemType: Sitegeist\StoneTablet\Domain\Field
+             labels:
+               addItem: 'Add Field'
+-
