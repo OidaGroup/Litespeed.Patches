@@ -4,7 +4,7 @@
             "Fix Mautic API": "https://raw.githubusercontent.com/OidaGroup/Litespeed.Patches/main/Mautic-Api.patch"
         },
         "sitegeist/stonetablet": {
-            "Fix Stonetabled": "https://raw.githubusercontent.com/OidaGroup/Litespeed.Patches/main/Sitegeist.StoneTablet.patch"
+            "Fix Stonetabled": "https://raw.githubusercontent.com/OidaGroup/Litespeed.Patches/main/Sitegeist-StoneTablet.patch"
         }
     }
 }
