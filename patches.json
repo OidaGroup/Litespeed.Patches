@@ -5,9 +5,6 @@
         },
         "sitegeist/stonetablet": {
             "Fix Stonetabled": "https://raw.githubusercontent.com/OidaGroup/Litespeed.Patches/main/Sitegeist-StoneTablet.patch"
-        },
-        "sitegeist/kaleidoscope": {
-            "Add quality option": "https://raw.githubusercontent.com/OidaGroup/Litespeed.Patches/main/Sitegeist-Kaleidoscope.patch"
         }
     }
 }
